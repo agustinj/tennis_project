@@ -1,43 +1,44 @@
 class Points:
     def __init__(self):
         self.points = [0, 0]  # 0 -> Player 1, 1 -> Player 2
-        self.score_values = [0, 15, 30, 40, "Adv"]  # 0, 15, 30, 40, "Adv"
+        self.score_values = [0, 15, 30, 40, "Adv"]
 
     def score_point(self, player):
         opponent = 1 - player
-        game_winner = 0
 
-        # Lógica de puntuación
+        # Caso especial: Ambos en 40 (Deuce)
         if self.points[player] >= 3 and self.points[opponent] >= 3:
-            if self.points[player] == self.points[opponent]:  # Deuce
-                self.points[player] = 4  # "Adv" para el jugador actual
-            elif self.points[player] == 4:  # Ventaja
-                game_winner = player + 1  # El jugador actual gana el game
-                self.reset()  # Resetear puntos
-            elif self.points[opponent] == 4:  # El otro jugador tiene ventaja
-                self.points[opponent] = 3  # Volver a 40-40 (Deuce)
-        else:
-            if self.points[player] == 3:  # Si estaba en 40 y gana, gana el game
-                game_winner = player + 1
+            if self.points[player] == self.points[opponent]:  # Si están en Deuce
+                self.points[player] = 4  # Dar ventaja al jugador actual
+            elif self.points[player] == 4:  # Si ya tenía ventaja, gana el game
                 self.reset()
-            else:
-                self.points[player] += 1
+                return player + 1  # Retorna 1 o 2 (ganador del game)
+            else:  # Si el rival tenía ventaja y el jugador anota, vuelven a Deuce
+                self.points[opponent] = 3
+        else:
+            self.points[player] += 1  # Aumentar puntos normales
+            if self.points[player] > 3:  # Si estaba en 40 y gana, gana el game
+                self.reset()
+                return player + 1
 
-        return game_winner
+        return 0  # Nadie ganó el game aún
 
     def reset(self):
         self.points = [0, 0]
 
     def get_score(self, player):
-        return str(self.score_values[min(self.points[player], 4)])  # Aseguramos que no se pase de "Adv"
+        return str(self.score_values[min(self.points[player], 4)])  # Evita índices fuera de rango
+
 
 class TennisGameModel:
     def __init__(self):
         self.points = Points()
-        self.games = [0, 0]  # [P1, P2]
+        self.games = [0, 0]  # Games ganados por cada jugador
 
     def score_point(self, player):
         game_winner = self.points.score_point(player)
+        if game_winner:  # Si alguien ganó el game
+            self.games[game_winner - 1] += 1  # Sumarle un game al jugador correcto
         return game_winner
 
     def get_score(self, player):
