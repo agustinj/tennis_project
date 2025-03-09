@@ -1,72 +1,71 @@
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.boxlayout import BoxLayout
 from TennisGameModel import TennisGameModel
 
 class TennisGameView(GridLayout):
     def __init__(self, **kwargs):
-        super().__init__(cols=2, padding=20, spacing=10, **kwargs)
+        super().__init__(cols=1, padding=20, spacing=10, **kwargs)
         
         # Modelo que gestiona la lógica
         self.model = TennisGameModel()
 
-        # Grids para la UI
-        self.top_grid = GridLayout(cols=2, size_hint_y=None, height=60)
-        self.top_grid.add_widget(Label(text="Points", font_size=30))
-        self.top_grid.add_widget(Label(text="0", font_size=30))
-        self.add_widget(self.top_grid)
-
-        self.bottom_grid = GridLayout(cols=3, size_hint_y=None, height=60)
-        self.bottom_grid.add_widget(Label(text="Games", font_size=30))
-
-        # Labels de games
-        self.p1_games = Label(text="0", font_size=30)
-        self.p2_games = Label(text="0", font_size=30)
-        self.bottom_grid.add_widget(self.p1_games)
-        self.bottom_grid.add_widget(self.p2_games)
-        self.add_widget(self.bottom_grid)
-
-        # Botones para los jugadores
-        self.player1_row = GridLayout(cols=2, size_hint_y=None, height=60)
+        # Sección de puntos, juegos y sets
+        self.scoreboard = GridLayout(cols=4, size_hint_y=None, height=80)  # Añadir columna para sets
+        self.scoreboard.add_widget(Label(text="Points", font_size=30, bold=True))
+        self.scoreboard.add_widget(Label(text="Games", font_size=30, bold=True, size_hint_x=None, width=100))
+        self.scoreboard.add_widget(Label(text="Sets", font_size=30, bold=True, size_hint_x=None, width=100))  # Columna de sets
+        self.scoreboard.add_widget(Label(text="", font_size=30))
+        self.add_widget(self.scoreboard)
+        
+        # Filas de jugadores
+        self.player1_row = BoxLayout()
         self.btn1 = Button(text="Player 1", font_size=30, on_press=lambda x: self.score_point(0))
         self.p1_points = Label(text="0", font_size=30)
+        self.p1_games = Label(text="0", font_size=30)
+        self.p1_sets = Label(text="0", font_size=30)  # Label para sets de Player 1
         self.player1_row.add_widget(self.btn1)
         self.player1_row.add_widget(self.p1_points)
+        self.player1_row.add_widget(self.p1_games)
+        self.player1_row.add_widget(self.p1_sets)  # Agregar al layout
         self.add_widget(self.player1_row)
 
-        self.player2_row = GridLayout(cols=2, size_hint_y=None, height=60)
+        self.player2_row = BoxLayout()
         self.btn2 = Button(text="Player 2", font_size=30, on_press=lambda x: self.score_point(1))
         self.p2_points = Label(text="0", font_size=30)
+        self.p2_games = Label(text="0", font_size=30)
+        self.p2_sets = Label(text="0", font_size=30)  # Label para sets de Player 2
         self.player2_row.add_widget(self.btn2)
         self.player2_row.add_widget(self.p2_points)
+        self.player2_row.add_widget(self.p2_games)
+        self.player2_row.add_widget(self.p2_sets)  # Agregar al layout
         self.add_widget(self.player2_row)
 
     def score_point(self, player):
-        game_winner = self.model.score_point(player)
-        
-        if game_winner:
-            self.show_game_message(f"Game - Player {game_winner}")
-            self.model.points.reset()  # Reseteamos puntos después de ganar un game
+        # Llamar al modelo para procesar el punto
+        game_winner, set_winner = self.model.score_point(player)
 
-        self.update_scoreboard()
+        if game_winner:
+            self.model.games.win_game(player)  # Llamar a win_game cuando se gane un juego
+            self.model.points.reset()  # Resetear puntos cuando se gane el juego
+            print(f"Game won by Player {player+1}")
+
+        if set_winner:
+            self.model.sets.win_set(set_winner - 1)  # Ganar set por el jugador adecuado
+            self.model.games = self.model.Games()  # Resetear los juegos después de un set ganado
+            print(f"Set won by Player {set_winner}")
+
+        self.update_scoreboard()  # Actualizar la interfaz con los puntajes
 
     def update_scoreboard(self):
-        self.p1_points.text = self.model.get_score(0)
-        self.p2_points.text = self.model.get_score(1)
-        self.p1_games.text = str(self.model.games[0])
-        self.p2_games.text = str(self.model.games[1])
+        # Actualiza la interfaz con el puntaje actual
+        self.p1_points.text = str(self.model.points.points[0])
+        self.p2_points.text = str(self.model.points.points[1])
+        self.p1_games.text = str(self.model.games.get_games(0))
+        self.p2_games.text = str(self.model.games.get_games(1))
+        self.p1_sets.text = str(self.model.sets.get_sets(0))  # Mostrar sets
+        self.p2_sets.text = str(self.model.sets.get_sets(1))  # Mostrar sets
 
     def show_game_message(self, message):
-        popup_layout = BoxLayout(orientation="vertical")
-        popup_label = Label(text=message, font_size=30)
-        close_button = Button(text="OK", size_hint_y=None, height=50)
-        
-        popup_layout.add_widget(popup_label)
-        popup_layout.add_widget(close_button)
-        
-        popup = Popup(title="Game Won!", content=popup_layout, size_hint=(None, None), size=(300, 200))
-        close_button.bind(on_press=popup.dismiss)
-        
-        popup.open()
+        print(message)
