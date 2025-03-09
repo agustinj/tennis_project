@@ -2,7 +2,7 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
-from TennisGameModel import TennisGameModel
+from TennisGameModel import Games, TennisGameModel
 
 class TennisGameView(GridLayout):
     def __init__(self, **kwargs):
@@ -47,25 +47,25 @@ class TennisGameView(GridLayout):
         game_winner, set_winner = self.model.score_point(player)
 
         if game_winner:
-            self.model.games.win_game(player)  # Llamar a win_game cuando se gane un juego
-            self.model.points.reset()  # Resetear puntos cuando se gane el juego
             print(f"Game won by Player {player+1}")
+            # Después de ganar el game, reiniciar los puntos
+            self.model.points.reset()
 
         if set_winner:
             self.model.sets.win_set(set_winner - 1)  # Ganar set por el jugador adecuado
-            self.model.games = self.model.Games()  # Resetear los juegos después de un set ganado
+            self.model.games = Games() # Resetear los juegos después de un set ganado
             print(f"Set won by Player {set_winner}")
 
         self.update_scoreboard()  # Actualizar la interfaz con los puntajes
 
     def update_scoreboard(self):
         # Actualiza la interfaz con el puntaje actual
-        self.p1_points.text = str(self.model.points.points[0])
-        self.p2_points.text = str(self.model.points.points[1])
-        self.p1_games.text = str(self.model.games.get_games(0))
-        self.p2_games.text = str(self.model.games.get_games(1))
-        self.p1_sets.text = str(self.model.sets.get_sets(0))  # Mostrar sets
-        self.p2_sets.text = str(self.model.sets.get_sets(1))  # Mostrar sets
+        self.p1_points.text = self.model.get_score(0)  # Cambié el acceso directo a get_score
+        self.p2_points.text = self.model.get_score(1)
+        self.p1_games.text = str(self.model.get_game_score(0))  # Actualizar con el getter
+        self.p2_games.text = str(self.model.get_game_score(1))
+        self.p1_sets.text = str(self.model.get_set_score(0))  # Actualizar con el getter
+        self.p2_sets.text = str(self.model.get_set_score(1))  # Actualizar con el getter
 
     def show_game_message(self, message):
         print(message)

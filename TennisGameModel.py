@@ -34,7 +34,10 @@ class Games:
         self.games = [0, 0]  # Games ganados por Player 1 y Player 2
 
     def win_game(self, player):
+        print(f"Before winning game: Player 1 games: {self.games[0]}, Player 2 games: {self.games[1]}")  # Log para ver antes de sumar
         self.games[player] += 1
+        print(f"After winning game: Player 1 games: {self.games[0]}, Player 2 games: {self.games[1]}")  # Log para ver después de sumar
+
 
     def get_games(self, player):
         return self.games[player]
@@ -78,20 +81,25 @@ class TennisGameModel:
         self.tie_break = TieBreak()
 
     def score_point(self, player):
-        # Aquí incrementas el punto para el jugador
+        print(f"Before scoring: Player 1 points: {self.points.points[0]}, Player 2 points: {self.points.points[1]}")  # Log para ver los puntos antes de la acción
+
         game_winner = self.points.score_point(player)
-        
-        if game_winner:  # Si un jugador ganó el game
+        print(f"After scoring: Player 1 points: {self.points.points[0]}, Player 2 points: {self.points.points[1]}")  # Log para ver los puntos después de la acción
+
+        if game_winner:  # Si alguien ganó el game
             self.games.win_game(player)
-            self.points.reset()  # Reiniciar puntos después de ganar el game
-        
-        # Revisamos si alguien ganó el set
+            print(f"Game won by Player {player + 1}")  # Log para saber si se ganó un game
+
+        # Verificar si alguien ganó el set después de ganar un game
         set_winner = self.sets.check_set_winner(self.games.get_games(0), self.games.get_games(1))
-        if set_winner:
-            self.sets.win_set(set_winner - 1)
-            # **Don't reset games here, only reset points after set wins**
-        
-        return game_winner, set_winner
+        if set_winner:  # Si hay un ganador de set
+            self.sets.win_set(set_winner - 1)  # Ganador del set
+            self.games = Games()  # Reiniciar los juegos después de un set ganado
+            print(f"Set won by Player {set_winner}")  # Log para saber si se ganó el set
+            return game_winner, set_winner
+
+        return game_winner, 0  # Si no se ha ganado el set, solo se devuelve el ganador del game
+
 
     def get_score(self, player):
         return self.points.get_score(player)
