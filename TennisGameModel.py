@@ -11,7 +11,7 @@ class Points:
                 self.points[player] = 4  # Ventaja para el jugador actual
             elif self.points[player] == 4:  # Si tenía ventaja, gana el game
                 self.reset()
-                return player + 1  # El jugador que ganó el game
+                return player + 1, 0  # El jugador que ganó el game, pero sin ganador del set
             else:
                 self.points[opponent] = 3  # El rival vuelve a Deuce
         else:
@@ -19,9 +19,9 @@ class Points:
 
             if self.points[player] == 4:
                 self.reset()
-                return player + 1  # El jugador ganó el game
+                return player + 1, 0  # El jugador ganó el game, pero no el set aún
 
-        return 0
+        return 0, 0  # Si no hay ganador aún
 
     def reset(self):
         self.points = [0, 0]
@@ -45,19 +45,29 @@ class Games:
 class Sets:
     def __init__(self):
         self.sets = [0, 0]  # Sets ganados por Player 1 y Player 2
+        self.tie_break = False  # Indicador de si se está jugando un tie-break
 
     def win_set(self, player):
+        print(f"Set ganado por el jugador {player + 1}")
         self.sets[player] += 1
 
     def get_sets(self, player):
         return self.sets[player]
 
     def check_set_winner(self, games_player1, games_player2):
-        # Verificar si se ha ganado un set
-        if games_player1 >= 6 or games_player2 >= 6:
-            if abs(games_player1 - games_player2) >= 2:
-                return 1 if games_player1 > games_player2 else 2
-        return 0
+        # Si hay empate en 6-6, activar el tie-break
+        if games_player1 == 6 and games_player2 == 6:
+            self.tie_break = True
+            print("Entering tie-break mode!")
+            return 'tie_break'  # Debe retornar 'tie_break' para que el código lo detecte
+
+        # Si alguien gana con diferencia de 2 games, gana el set
+        if (games_player1 >= 6 or games_player2 >= 6) and abs(games_player1 - games_player2) >= 2:
+            self.tie_break = False  # Resetear el tie-break si termina el set
+            return 1 if games_player1 > games_player2 else 2  
+
+        return 0  # No hay ganador del set todavía
+
 
 class TieBreak:
     def __init__(self):
@@ -80,26 +90,45 @@ class TennisGameModel:
         self.sets = Sets()
         self.tie_break = TieBreak()
 
+class TennisGameModel:
+    def __init__(self):
+        self.points = Points()
+        self.games = Games()
+        self.sets = Sets()
+        self.tie_break = TieBreak()
+
     def score_point(self, player):
-        print(f"Before scoring: Player 1 points: {self.points.points[0]}, Player 2 points: {self.points.points[1]}")  # Log para ver los puntos antes de la acción
+        # Si está en tie-break, contar puntos con `TieBreak`
+        if self.sets.tie_break:
+            tie_winner = self.tie_break.score_point(player)
+            if tie_winner:
+                print(f"Set won by Player {tie_winner} (Tie-Break Mode)")
+                self.sets.win_set(tie_winner - 1)
+                self.games = Games()  # Resetear los games
+                self.tie_break.reset()  # Resetear el tie-break
+                self.sets.tie_break = False  # Salir del tie-break
+                return tie_winner, tie_winner  # Retorna el ganador del set
 
-        game_winner = self.points.score_point(player)
-        print(f"After scoring: Player 1 points: {self.points.points[0]}, Player 2 points: {self.points.points[1]}")  # Log para ver los puntos después de la acción
+            return 0, 0  # Sigue el tie-break sin ganador aún
 
-        if game_winner:  # Si alguien ganó el game
+        # Si no es tie-break, procesar normalmente
+        game_winner, _ = self.points.score_point(player)
+
+        if game_winner:
             self.games.win_game(player)
-            print(f"Game won by Player {player + 1}")  # Log para saber si se ganó un game
 
-        # Verificar si alguien ganó el set después de ganar un game
+        # Verificar si se ha llegado a 6-6 y si es necesario iniciar un tie-break
         set_winner = self.sets.check_set_winner(self.games.get_games(0), self.games.get_games(1))
-        if set_winner:  # Si hay un ganador de set
-            self.sets.win_set(set_winner - 1)  # Ganador del set
-            self.games = Games()  # Reiniciar los juegos después de un set ganado
-            print(f"Set won by Player {set_winner}")  # Log para saber si se ganó el set
+
+        if set_winner == 'tie_break':
+            return game_winner, 'tie_break'
+
+        if set_winner:
+            self.sets.win_set(set_winner - 1)
+            self.games = Games()  # Resetear los juegos
             return game_winner, set_winner
 
-        return game_winner, 0  # Si no se ha ganado el set, solo se devuelve el ganador del game
-
+        return game_winner, 0
 
     def get_score(self, player):
         return self.points.get_score(player)

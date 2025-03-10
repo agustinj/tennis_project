@@ -48,24 +48,35 @@ class TennisGameView(GridLayout):
 
         if game_winner:
             print(f"Game won by Player {player+1}")
-            # Después de ganar el game, reiniciar los puntos
-            self.model.points.reset()
+            self.model.points.reset()  # Después de ganar el game, reiniciar los puntos
 
-        if set_winner:
-            self.model.sets.win_set(set_winner - 1)  # Ganar set por el jugador adecuado
-            self.model.games = Games() # Resetear los juegos después de un set ganado
+        if set_winner == "tie_break":
+            print("Entering tie-break mode!")  # Mensaje para depuración
+
+        if self.model.sets.tie_break:
+            print("Entering tie-break mode!")  # Mensaje para depuración
+
+        elif set_winner:  # Si alguien ganó el set normalmente
+            self.model.games = Games()  # Resetear juegos después de un set ganado
             print(f"Set won by Player {set_winner}")
 
         self.update_scoreboard()  # Actualizar la interfaz con los puntajes
 
     def update_scoreboard(self):
-        # Actualiza la interfaz con el puntaje actual
-        self.p1_points.text = self.model.get_score(0)  # Cambié el acceso directo a get_score
-        self.p2_points.text = self.model.get_score(1)
-        self.p1_games.text = str(self.model.get_game_score(0))  # Actualizar con el getter
+        # Si está en tie-break, muestra los puntos de tie-break en lugar de los normales
+        if self.model.sets.tie_break:
+            self.p1_points.text = str(self.model.tie_break.points[0])
+            self.p2_points.text = str(self.model.tie_break.points[1])
+        else:
+            self.p1_points.text = self.model.get_score(0)
+            self.p2_points.text = self.model.get_score(1)
+
+        # Actualiza games y sets como siempre
+        self.p1_games.text = str(self.model.get_game_score(0))
         self.p2_games.text = str(self.model.get_game_score(1))
-        self.p1_sets.text = str(self.model.get_set_score(0))  # Actualizar con el getter
-        self.p2_sets.text = str(self.model.get_set_score(1))  # Actualizar con el getter
+        self.p1_sets.text = str(self.model.get_set_score(0))
+        self.p2_sets.text = str(self.model.get_set_score(1))
+
 
     def show_game_message(self, message):
         print(message)
