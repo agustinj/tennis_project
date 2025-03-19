@@ -114,43 +114,47 @@ class TennisGameModel:
         self.tie_break = TieBreak()  # El tie-break
 
     def score_point(self, player):
-        # Primero manejamos el puntaje normal de los juegos
-        game_winner, set_winner = self.points.score_point(player)
+        # Si estamos en tie-break, procesamos el punto con esa lógica
+        if self.tie_break.started and not self.tie_break.finished:
+            tie_break_winner = self.tie_break.score_point(player)
 
-        # Si se gana el juego, se suman los juegos
+            if tie_break_winner:
+                print(f"DEBUG - Tie-break ganado por Player {tie_break_winner}")
+                self.sets.win_set(tie_break_winner - 1)
+                self.games = Games()  # Reseteamos los games
+                self.tie_break.reset()  # Reseteamos el tie-break para el siguiente set
+                return 0, tie_break_winner  # El segundo valor indica el ganador del set
+
+            return 0, 'tie_break'  # Seguimos en tie-break
+
+        # Si no estamos en tie-break, seguimos con la lógica normal
+        game_winner, _ = self.points.score_point(player)
+
         if game_winner:
             self.games.win_game(player)
 
-        # Comprobamos si el set llegó a 6-6
         games_player1 = self.games.get_games(0)
         games_player2 = self.games.get_games(1)
 
         print(f"DEBUG - Games -> Player 1: {games_player1}, Player 2: {games_player2}")
 
-        # Si el set está en 6-6, se activa el tie-break
-        if games_player1 == 6 and games_player2 == 6:
-            if not self.tie_break.started:
-                print("DEBUG - Tie Break activado")
-                self.tie_break.start()  # Inicia el tie-break
-                self.points.reset()  # Resetea los puntos normales antes del tie-break
-                return game_winner, 'tie_break'  # Retorna para indicar que estamos en tie-break
+        # Activar Tie Break si es necesario
+        if games_player1 == 6 and games_player2 == 6 and not self.tie_break.started:
+            print("DEBUG - Tie Break activado")
+            self.tie_break.start()
+            self.points.reset()
+            return 0, 'tie_break'
 
-        # Si estamos en tie-break y no ha terminado
-        if self.tie_break.started and not self.tie_break.finished:
-            tie_break_winner = self.tie_break.score_point(player)  # Actualizar puntos en el tie-break
-            if tie_break_winner:
-                print(f"DEBUG - Tie-break winner: Player {tie_break_winner}")
-            return game_winner, 'tie_break'
-
-        # Si no estamos en tie-break, evaluamos si alguien ya ganó el set
+        # Verificamos si alguien ganó el set
         set_winner = self.sets.check_set_winner(games_player1, games_player2)
 
         if set_winner:
-            self.sets.win_set(set_winner - 1)  # Ganador del set
-            self.games = Games()  # Reiniciamos el contador de juegos
-            self.tie_break.reset()  # Reseteamos el tie-break para el siguiente set
+            self.sets.win_set(set_winner - 1)
+            self.games = Games()
+            self.tie_break.reset()
+            return 0, set_winner
 
-        return game_winner, set_winner
+        return game_winner, 0
 
     def get_score(self, player):
         return self.points.get_score(player)

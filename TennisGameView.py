@@ -68,33 +68,31 @@ class TennisGameView(BoxLayout):
         self.btn2.bind(on_press=lambda instance: self.score_point(1))  # Jugador 2
 
     def score_point(self, player):
+        previous_game_score = [self.model.get_game_score(0), self.model.get_game_score(1)]
+
         game_winner, set_winner = self.model.score_point(player)
 
-        # Verificamos si el puntaje de los games llega a 6-6
         current_game_score = [self.model.get_game_score(0), self.model.get_game_score(1)]
-        
-        if current_game_score == [6, 6] and self.last_game_scores != current_game_score:
-            # Si llegamos a 6-6 en los games y no lo habíamos registrado, mostramos el mensaje de tie-break
-            GameMessages.show_tiebreak()
-            self.last_game_scores = current_game_score  # Actualizamos los scores de los games
 
-        # Muestra el ganador del juego si es necesario
-        if game_winner:
+        # Si el modelo indica que entramos en Tie Break, mostramos el mensaje
+        if set_winner == 'tie_break' and not self.model.tie_break.started:
+            self.model.tie_break.start()
+            GameMessages.show_tiebreak()
+
+        # Muestra el ganador del juego solo si no estamos en Tie Break
+        if game_winner and not self.model.tie_break.started:
             GameMessages.show_game_won(player, self.player1_name, self.player2_name)
 
-        # Comprobamos si el número de sets ha cambiado
-        current_set_score = [self.model.get_set_score(0), self.model.get_set_score(1)]
-        if current_set_score != self.last_set_scores:
-            # Si el contador de sets ha cambiado, mostramos el mensaje
+        # Muestra el ganador del set si es necesario
+        if isinstance(set_winner, int) and set_winner > 0:
             GameMessages.show_set_won(player, self.player1_name, self.player2_name)
-            self.last_set_scores = current_set_score  # Actualizamos el contador de sets
 
-        # Muestra el ganador del partido si es necesario
+        # Verifica si alguien ganó el partido
         if self.model.get_set_score(player) == 2:
             GameMessages.show_match_won(player, self.player1_name, self.player2_name)
 
-        # Actualiza la UI (tabla de puntuación) después de procesar el punto
-        self.update_scoreboard()  # Actualiza el puntaje visual
+        # Actualiza la UI después de procesar el punto
+        self.update_scoreboard()
 
     def update_scoreboard(self):
         # Si está en tie-break, muestra los puntos de tie-break
