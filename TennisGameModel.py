@@ -141,6 +141,7 @@ class TennisGameModel:
         # Activar Tie Break si es necesario
         if games_player1 == 6 and games_player2 == 6 and not self.tie_break.started:
             print("DEBUG - Tie Break activado")
+            GameMessages.show_tiebreak() 
             self.tie_break.start()
             self.points.reset()
             return 0, 'tie_break'
