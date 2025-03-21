@@ -15,10 +15,11 @@ En el futuro, la Tennis App evolucionará para incluir más funcionalidades, esp
 
 1. **Tipos de Puntos**: Se podrá marcar qué tipo de puntos ganó cada jugador, incluyendo:
    - Ace
+   - Double Fault
+   - Winner serve
    - Winner
    - Unforced Error
    - Forced Error
-   - Double Fault
 
 2. **Seguimiento de Estadísticas**: Toda la información sobre los tipos de puntos ganados se almacenará a lo largo de los juegos y sets, permitiendo la recopilación de datos detallados sobre el rendimiento de los jugadores.
 
