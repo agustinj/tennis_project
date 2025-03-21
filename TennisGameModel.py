@@ -165,3 +165,9 @@ class TennisGameModel:
 
     def get_set_score(self, player):
         return self.sets.get_sets(player)
+    
+    def reset(self):
+        self.points = Points()
+        self.games = Games()
+        self.sets = Sets()
+        self.tie_break = TieBreak()

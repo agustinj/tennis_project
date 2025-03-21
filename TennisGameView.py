@@ -89,12 +89,14 @@ class TennisGameView(BoxLayout):
 
         # Verifica si alguien ganó el partido
         if self.model.get_set_score(player) == 2:
-            GameMessages.show_match_won(player, self.player1_name, self.player2_name)
+            GameMessages.show_match_won(player, self.player1_name, self.player2_name, self.on_message_dismissed)
 
         # Actualiza la UI después de procesar el punto
         self.update_scoreboard()
 
     def update_scoreboard(self):
+        print(f"DEBUG - Actualizando UI: Sets P1: {self.model.get_set_score(0)}, P2: {self.model.get_set_score(1)}")
+
         # Si está en tie-break, muestra los puntos de tie-break
         if self.model.tie_break.started:
             self.p1_points.text = str(self.model.tie_break.points[0])  # Mostrar puntos del tie-break
@@ -126,8 +128,32 @@ class TennisGameView(BoxLayout):
         self.btn2.disabled = False
 
         if reset:
-            self.reset_game()
+            self.reset_match(reset=True)
 
     def reset_game(self):
         self.model = TennisGameModel()
         self.update_scoreboard()
+
+    def reset_match(self, reset=False):
+        print("DEBUG - reset_match fue llamado con reset =", reset)
+
+        if reset:
+            print("DEBUG - reset_match fue llamado y ejecutado")
+            print(f"DEBUG - Antes de reset: P1 sets: {self.model.get_set_score(0)}, P2 sets: {self.model.get_set_score(1)}")
+
+            self.model.reset()  
+
+            # Verificar que el modelo tiene valores en 0
+            print(f"DEBUG - Después del reset: Player 1 games: {self.model.get_game_score(0)}, Player 2 games: {self.model.get_game_score(1)}")
+            print(f"DEBUG - Después del reset: Player 1 sets: {self.model.get_set_score(0)}, Player 2 sets: {self.model.get_set_score(1)}")
+
+            # Forzar actualización de la UI
+            self.update_scoreboard()
+
+            # Debug para verificar si los sets realmente están en 0
+            print(f"DEBUG - Después del reset: Player 1 sets: {self.model.get_set_score(0)}, Player 2 sets: {self.model.get_set_score(1)}")
+
+    def handle_popup_callback(self, reset=False):
+        print(f"DEBUG - handle_popup_callback llamado con reset={reset}")
+        if reset:
+            self.reset_match()  # Reinicia el partido si el popup lo indica

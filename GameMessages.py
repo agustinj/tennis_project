@@ -3,6 +3,7 @@ from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from kivy.clock import Clock
+import TennisGameView
 
 class GameMessagePopup(Popup):
     def __init__(self, message, callback=None, is_match_winner=False, **kwargs):
@@ -33,6 +34,7 @@ class GameMessagePopup(Popup):
             self.callback()
 
     def dismiss_and_reset(self, instance):
+        print("DEBUG - dismiss_and_reset llamado")  # Ver si se ejecuta
         self.dismiss()
         if self.callback:
             self.callback(reset=True)
@@ -55,12 +57,11 @@ class GameMessages:
         GameMessages.show_message(message)
 
     @staticmethod
-    def show_match_won(player, player1_name, player2_name):
+    def show_match_won(player, player1_name, player2_name, callback):
         message = f"Match won by {player1_name}!" if player == 0 else f"Match won by {player2_name}!"
-        GameMessages.show_message(message, is_match_winner=True)
+        GameMessages.show_message(message, is_match_winner=True, callback=callback)
 
     @staticmethod
-    def show_message(message, is_match_winner=False):
-        # Este es el mensaje que se muestra
-        popup = GameMessagePopup(message, is_match_winner=is_match_winner)
+    def show_message(message, is_match_winner=False, callback=None):
+        popup = GameMessagePopup(message, callback=callback, is_match_winner=is_match_winner)
         popup.open()
